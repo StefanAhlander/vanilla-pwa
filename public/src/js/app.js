@@ -1,28 +1,18 @@
-let deferedPrompt;
+let deferredPrompt;
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker
-    .register('/serviceworker.js')
+    .register('/sw.js')
     .then(function () {
-      console.log('ServiceWorker registered.');
+      console.log('Service worker registered!');
     })
-    .catch((err) => console.error(err));
+    .catch(function (err) {
+      console.log(err);
+    });
 }
 
 window.addEventListener('beforeinstallprompt', function (event) {
   event.preventDefault();
-  deferedPrompt = event;
+  deferredPrompt = event;
   return false;
 });
-
-fetch('https://httpbin.org/post', {
-  method: 'POST',
-  mode: 'cors',
-  body: 'boom! I hit you!',
-})
-  .then((response) => {
-    console.log(response);
-    return response.json();
-  })
-  .then((data) => console.log(data.data))
-  .catch((err) => console.error(err));
