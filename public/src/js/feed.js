@@ -48,23 +48,23 @@ function clearCards() {
   }
 }
 
-function createCard() {
+function createCard(cardData) {
   const cardWrapper = document.createElement('div');
   cardWrapper.className = 'shared-moment-card mdl-card mdl-shadow--2dp';
   const cardTitle = document.createElement('div');
   cardTitle.className = 'mdl-card__title';
-  cardTitle.style.backgroundImage = 'url("/src/images/sf-boat.jpg")';
+  cardTitle.style.backgroundImage = `url('${cardData.image}')`;
   cardTitle.style.backgroundSize = 'cover';
   cardTitle.style.height = '180px';
   cardWrapper.appendChild(cardTitle);
   const cardTitleTextElement = document.createElement('h2');
   cardTitleTextElement.className = 'mdl-card__title-text';
-  cardTitleTextElement.textContent = 'San Francisco Trip';
+  cardTitleTextElement.textContent = cardData.title;
   cardTitleTextElement.style.color = 'white';
   cardTitle.appendChild(cardTitleTextElement);
   const cardSupportingText = document.createElement('div');
   cardSupportingText.className = 'mdl-card__supporting-text';
-  cardSupportingText.textContent = 'In San Francisco ';
+  cardSupportingText.textContent = cardData.location;
   cardSupportingText.style.textAlign = 'center';
   /* const cardSaveButton = document.createElement('button');
   cardSaveButton.textContent = 'Save';
@@ -75,7 +75,15 @@ function createCard() {
   sharedMomentsArea.appendChild(cardWrapper);
 }
 
-const url = 'https://httpbin.org/get';
+function updateUI(data) {
+  clearCards();
+  for (const card of data) {
+    createCard(card);
+  }
+}
+
+const url =
+  'https://pwagram-25646-default-rtdb.europe-west1.firebasedatabase.app/posts.json';
 let networkDataReceived = false;
 
 fetch(url)
@@ -85,24 +93,19 @@ fetch(url)
   .then(function (data) {
     networkDataReceived = true;
     console.log('from web ', data);
-    clearCards();
-    createCard();
+    const dataArray = [];
+    for (const key in data) {
+      dataArray.push(data[key]);
+    }
+    updateUI(dataArray);
   })
   .catch((err) => console.error(err));
 
-if ('caches' in window) {
-  caches
-    .match(url)
-    .then((response) => {
-      if (response) {
-        return response.json();
-      }
-    })
-    .then((data) => {
-      console.log('from cache ', data || 'data');
-      if (!networkDataReceived) {
-        clearCards();
-        createCard();
-      }
-    });
+if ('indexedDB' in window) {
+  readAllData('posts').then((data) => {
+    if (!networkDataReceived) {
+      console.log('from cache', data);
+      updateUI(data);
+    }
+  });
 }

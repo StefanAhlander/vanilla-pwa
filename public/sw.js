@@ -1,4 +1,7 @@
-const CACHE_VERSION = 2;
+importScripts('/src/js/idb.js');
+importScripts('/src/js/utilities.js');
+
+const CACHE_VERSION = 1;
 const CURRENT_CACHES = new Set([
   `static_${CACHE_VERSION}`,
   `dynamic_${CACHE_VERSION}`,
@@ -10,6 +13,7 @@ const STATIC_FILES = [
   '/src/js/app.js',
   '/src/js/feed.js',
   '/src/js/material.min.js',
+  '/src/js/idb.js',
   '/src/css/app.css',
   '/src/css/feed.css',
   '/src/images/main-image.jpg',
@@ -17,7 +21,7 @@ const STATIC_FILES = [
   'https://fonts.googleapis.com/icon?family=Material+Icons',
   'https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.3.0/material.indigo-pink.min.css',
 ];
-const CACHE_LIMIT = 10;
+// const CACHE_LIMIT = 10;
 
 /* function trimCache(cacheName, maxItems) {
   caches.open(cacheName).then((cache) => {
@@ -60,16 +64,23 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  const url = 'https://httpbin.org/get';
+  const url =
+    'https://pwagram-25646-default-rtdb.europe-west1.firebasedatabase.app/posts';
 
   if (event.request.url.includes(url)) {
     event.respondWith(
-      caches.open(`dynamic_${CACHE_VERSION}`).then((cache) => {
-        return fetch(event.request).then((result) => {
-          // trimCache(`dynamic_${CACHE_VERSION}`, CACHE_LIMIT);
-          cache.put(event.request, result.clone());
-          return result;
-        });
+      fetch(event.request).then((res) => {
+        const clonedRes = res.clone();
+        clearAllData('posts')
+          .then(() => {
+            return clonedRes.json();
+          })
+          .then((data) => {
+            for (let key in data) {
+              writeData('posts', data[key]);
+            }
+          });
+        return res;
       })
     );
   } else {
