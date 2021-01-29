@@ -1,7 +1,7 @@
 importScripts('/src/js/idb.js');
 importScripts('/src/js/utilities.js');
 
-const CACHE_VERSION = 1;
+const CACHE_VERSION = 3;
 const CURRENT_CACHES = new Set([
   `static_${CACHE_VERSION}`,
   `dynamic_${CACHE_VERSION}`,
