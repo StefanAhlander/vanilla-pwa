@@ -63,10 +63,10 @@ self.addEventListener('activate', (event) => {
   return self.clients.claim();
 });
 
-self.addEventListener('fetch', (event) => {
-  const url =
-    'https://pwagram-25646-default-rtdb.europe-west1.firebasedatabase.app/posts';
+const url =
+  'https://pwagram-25646-default-rtdb.europe-west1.firebasedatabase.app/posts.json';
 
+self.addEventListener('fetch', (event) => {
   if (event.request.url.includes(url)) {
     event.respondWith(
       fetch(event.request).then((res) => {
@@ -111,6 +111,42 @@ self.addEventListener('fetch', (event) => {
         .catch((err) => {
           console.error(err);
         })
+    );
+  }
+});
+
+self.addEventListener('sync', (evt) => {
+  console.log('[Serivce Working] Background syncing.', evt);
+  if (evt.tag === 'sync-new-posts') {
+    console.log('[Serivce Working] Syncing new posts.');
+    evt.waitUntil(
+      readAllData('sync-posts').then((data) => {
+        for (const post of data) {
+          fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+            body: JSON.stringify({
+              id: post.id,
+              title: post.title,
+              location: post.location,
+              image:
+                'https://upload.wikimedia.org/wikipedia/commons/1/1e/San_Francisco_from_the_Marin_Headlands_in_March_2019.jpg',
+            }),
+          })
+            .then((res) => {
+              console.log('Sent data', res);
+              if (res.ok) {
+                deleteItemFromData('sync-posts', data.id);
+              }
+            })
+            .catch((err) => {
+              console.error(err);
+            });
+        }
+      })
     );
   }
 });

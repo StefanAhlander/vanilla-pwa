@@ -4,6 +4,9 @@ const closeCreatePostModalButton = document.querySelector(
   '#close-create-post-modal-btn'
 );
 const sharedMomentsArea = document.querySelector('#shared-moments');
+const form = document.querySelector('form');
+const titleInput = document.querySelector('#title');
+const locationInput = document.querySelector('#location');
 
 function openCreatePostModal() {
   createPostArea.style.transform = 'translateY(0)';
@@ -108,3 +111,64 @@ if ('indexedDB' in window) {
     }
   });
 }
+
+function sendData() {
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      Accept: 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    },
+    body: JSON.stringify({
+      id: new Date.toISOString(),
+      title: titleInput.value,
+      location: locationInput.value,
+      image:
+        'https://upload.wikimedia.org/wikipedia/commons/1/1e/San_Francisco_from_the_Marin_Headlands_in_March_2019.jpg',
+    }),
+  })
+    .then((res) => {
+      console.log('Sent data', res);
+      updateUI();
+    })
+    .catch((err) => {
+      console.err(err);
+    });
+}
+
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (titleInput.value.trim() === '' || locationInput.value.trim() === '') {
+    alert('Please enter valid data!');
+    return;
+  }
+
+  closeCreatePostModal();
+
+  if ('serviceWorker' in navigator && 'SyncManager' in window) {
+    navigator.serviceWorker.ready.then((sw) => {
+      const post = {
+        id: new Date().toISOString(),
+        title: titleInput.value,
+        location: locationInput.value,
+      };
+      writeData('sync-posts', post)
+        .then(() => {
+          return sw.sync.register('sync-new-posts');
+        })
+        .then(() => {
+          const snackbarContainer = document.querySelector(
+            '#confirmation-toast'
+          );
+          const data = { message: 'Your post was saved for syncing' };
+          snackbarContainer.MaterialSnackbar.showSnackbar(data);
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+    });
+  } else {
+    sendData();
+  }
+});
