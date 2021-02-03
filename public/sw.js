@@ -122,7 +122,7 @@ self.addEventListener('sync', (evt) => {
     evt.waitUntil(
       readAllData('sync-posts').then((data) => {
         for (const post of data) {
-          fetch(url, {
+          fetch('http://localhost:3000/storepostdata', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -139,7 +139,9 @@ self.addEventListener('sync', (evt) => {
             .then((res) => {
               console.log('Sent data', res);
               if (res.ok) {
-                deleteItemFromData('sync-posts', data.id);
+                res
+                  .json()
+                  .then((data) => deleteItemFromData('sync-posts', data.id));
               }
             })
             .catch((err) => {

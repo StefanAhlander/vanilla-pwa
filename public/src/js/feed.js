@@ -113,7 +113,7 @@ if ('indexedDB' in window) {
 }
 
 function sendData() {
-  fetch(url, {
+  fetch('http://localhost:3000/storepostdata', {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
